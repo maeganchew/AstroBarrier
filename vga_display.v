@@ -2,11 +2,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 // VGA verilog template
 //////////////////////////////////////////////////////////////////////////////////
-module vga_demo(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, btnU, btnD,
+module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, btnL, btnR, btnU,
 	St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 	An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp,
 	LD0, LD1, LD2, LD3, LD4, LD5, LD6, LD7);
-	input ClkPort, Sw0, btnU, btnD, Sw0, Sw1;
+	input ClkPort, Sw0, btnL, btnR, btnU, Sw0, Sw1;
 	output St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar;
 	output vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b;
 	output An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp;
@@ -48,6 +48,7 @@ module vga_demo(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, 
 	reg [9:0] positionTopX;
 	reg [9:0] positionTopY;
 	reg [1:0] left;
+	reg [1:0] shoot;
 	
 	always @(posedge DIV_CLK[21])
 		begin
@@ -57,11 +58,22 @@ module vga_demo(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, 
 					positionTopX <= 200;
 					positionTopY <= 400;
 					left <= 0;
+					shoot <= 0;
 				end
-			else if(btnD && ~btnU)
-				position<=position+2;
-			else if(btnU && ~btnD)
-				position<=position-2;
+			else if(btnR && ~btnL)
+				begin
+					if(position < 600)
+						position<=position+2;
+				end
+			else if(btnL && ~btnR)
+				begin
+					if(position > 30)
+						position<=position-2;
+				end
+			else if(btnU && ~btnL && ~btnR)
+				begin
+					shoot <= 1;
+				end
 			if(positionTopX == 398)
 				left <= 1;
 			if(positionTopX == 202)
@@ -77,10 +89,10 @@ module vga_demo(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, 
 		CounterY[9:6]==7
 		Bottom Square
 	*/
-	wire R = CounterX>=(position-10) && CounterX<=(position+10) && CounterY[9:6]==7;
+	wire R = CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
 	//CounterX>100 && CounterX<200 && CounterY[5:3]==7;
-	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY[9:6]==4;
-	wire B = 0;
+	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY[9:5]==7;
+	wire B = (shoot == 1) ? CounterX>100 && CounterX<200 && CounterY[5:3]==7 : 0;
 	
 	always @(posedge clk)
 	begin
