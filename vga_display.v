@@ -59,7 +59,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 				begin
 					position<=400;
 					positionTopX <= 200;
-					positionTopY <= 400;
+					positionTopY <= 200;
 					left <= 0;
 					shoot <= 0;
 					hit <= 0;
@@ -99,7 +99,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 						positionShootY <= positionShootY - 10;
 
 					if(positionShootX >= (positionTopX - 10) && positionShootX <= (positionTopX + 10)
-						&& positionShootY >= 448 && positionShootY <= 480)
+						 && positionShootY >= (positionTopY-10) && positionShootY <= (positionTopY+10))
 						hit <= 1;
 				end
 		end
@@ -110,7 +110,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 	*/
 	wire R = CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
 	//CounterX>100 && CounterX<200 && CounterY[5:3]==7;
-	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY[9:5]==5;
+	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10);
 	wire B = (shoot == 1) ? CounterY>=(positionShootY-10) && CounterY<=(positionShootY+10) 
 		&& CounterX>=(positionShootX-10) && CounterX<=(positionShootX+10) : 0;
 	
