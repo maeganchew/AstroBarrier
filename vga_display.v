@@ -77,7 +77,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 			else if(btnU && ~btnL && ~btnR)
 				begin
 					shoot <= 1;
-					positionShootY <= 450;
+					positionShootY <= 430;
 					positionShootX <= position;
 				end
 			if(hit == 0)
@@ -108,9 +108,12 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 		CounterY[9:6]==7
 		Bottom Square
 	*/
-	wire R = CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
+	wire R = (hit == 1) ? (CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7) 
+		| (CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10))
+		: CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
 	//CounterX>100 && CounterX<200 && CounterY[5:3]==7;
-	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10);
+	wire G = (hit == 0) ? CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10)
+		: 0;
 	wire B = (shoot == 1) ? CounterY>=(positionShootY-10) && CounterY<=(positionShootY+10) 
 		&& CounterX>=(positionShootX-10) && CounterX<=(positionShootX+10) : 0;
 	
