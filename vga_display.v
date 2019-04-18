@@ -64,22 +64,26 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 					shoot <= 0;
 					hit <= 0;
 				end
+			//ship moves right
 			else if(btnR && ~btnL)
 				begin
 					if(position < 610)
 						position<=position+2;
 				end
+			//ship moves left
 			else if(btnL && ~btnR)
 				begin
 					if(position > 30)
 						position<=position-2;
 				end
+			//shoot from ship
 			else if(btnU && ~btnL && ~btnR)
 				begin
 					shoot <= 1;
 					positionShootY <= 430;
 					positionShootX <= position;
 				end
+			//target isn't hit, keep moving
 			if(hit == 0)
 				begin
 					if(positionTopX == 398)
@@ -91,7 +95,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 					else
 						positionTopX <= positionTopX + 2;
 				end
-			if(shoot == 1)
+			if(shoot == 1 && hit == 0)
 				begin
 					if(positionShootY == 0)
 						shoot <= 0;
@@ -100,7 +104,10 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 
 					if(positionShootX >= (positionTopX - 10) && positionShootX <= (positionTopX + 10)
 						 && positionShootY >= (positionTopY-10) && positionShootY <= (positionTopY+10))
-						hit <= 1;
+						begin
+							hit <= 1;
+							shoot <= 0;
+						end
 				end
 		end
 	
