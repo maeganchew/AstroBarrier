@@ -49,6 +49,9 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 	reg [9:0] positionTopY;
 	reg [1:0] left;
 	reg [1:0] shoot;
+	reg [1:0] hit;
+	reg [9:0] positionShootY;
+	reg [9:0] positionShootX;
 	
 	always @(posedge DIV_CLK[21])
 		begin
@@ -59,10 +62,11 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 					positionTopY <= 400;
 					left <= 0;
 					shoot <= 0;
+					hit <= 0;
 				end
 			else if(btnR && ~btnL)
 				begin
-					if(position < 600)
+					if(position < 610)
 						position<=position+2;
 				end
 			else if(btnL && ~btnR)
@@ -73,16 +77,31 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 			else if(btnU && ~btnL && ~btnR)
 				begin
 					shoot <= 1;
+					positionShootY <= 450;
+					positionShootX <= position;
 				end
-			if(positionTopX == 398)
-				left <= 1;
-			if(positionTopX == 202)
-				left <= 0;
-			if(left == 1)
-				positionTopX <= positionTopX - 2;
-			else
-				positionTopX <= positionTopX + 2;
-		
+			if(hit == 0)
+				begin
+					if(positionTopX == 398)
+						left <= 1;
+					if(positionTopX == 202)
+						left <= 0;
+					if(left == 1)
+						positionTopX <= positionTopX - 2;
+					else
+						positionTopX <= positionTopX + 2;
+				end
+			if(shoot == 1)
+				begin
+					if(positionShootY == 0)
+						shoot <= 0;
+					else
+						positionShootY <= positionShootY - 10;
+
+					if(positionShootX >= (positionTopX - 10) && positionShootX <= (positionTopX + 10)
+						&& positionShootY >= 448 && positionShootY <= 480)
+						hit <= 1;
+				end
 		end
 	
 	/*
@@ -91,8 +110,9 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 	*/
 	wire R = CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
 	//CounterX>100 && CounterX<200 && CounterY[5:3]==7;
-	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY[9:5]==7;
-	wire B = (shoot == 1) ? CounterX>100 && CounterX<200 && CounterY[5:3]==7 : 0;
+	wire G = CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY[9:5]==5;
+	wire B = (shoot == 1) ? CounterY>=(positionShootY-10) && CounterY<=(positionShootY+10) 
+		&& CounterX>=(positionShootX-10) && CounterX<=(positionShootX+10) : 0;
 	
 	always @(posedge clk)
 	begin
