@@ -2,16 +2,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 // VGA verilog template
 //////////////////////////////////////////////////////////////////////////////////
-module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw1, btnL, btnR, btnU,
+module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b, Sw0, Sw1, btnL, btnR, btnU,
 	St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 	An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp,
 	LD0, LD1, LD2, LD3, LD4, LD5, LD6, LD7);
 	input ClkPort, Sw0, btnL, btnR, btnU, Sw0, Sw1;
 	output St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar;
-	output vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b;
+	output vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b;
 	output An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp;
 	output LD0, LD1, LD2, LD3, LD4, LD5, LD6, LD7;
-	reg vga_r, vga_g, vga_b;
+	reg vgaRed, vga_r, vga_g, vga_b;
 	
 	//////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -44,12 +44,13 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 	/////////////////////////////////////////////////////////////////
 	///////////////		VGA control starts here		/////////////////
 	/////////////////////////////////////////////////////////////////
-	reg [9:0] position;
-	reg [9:0] positionTopX;
-	reg [9:0] positionTopY;
-	reg [1:0] left;
+	reg [9:0] shipPos;
+	reg [9:0] midTargetX;
+	reg [9:0] midTargetY;
+	reg [1:0] isLeftMid;
 	reg [1:0] shoot;
-	reg [1:0] hit;
+	reg [1:0] isHitMid;
+	reg [1:0] allHit;
 	reg [9:0] positionShootY;
 	reg [9:0] positionShootX;
 	
@@ -57,76 +58,81 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 		begin
 			if(reset)
 				begin
-					position<=400;
-					positionTopX <= 200;
-					positionTopY <= 200;
-					left <= 0;
+					shipPos<=400;
+					midTargetX <= 200;
+					midTargetY <= 250;
+					isLeftMid <= 0;
 					shoot <= 0;
-					hit <= 0;
+					isHitMid <= 0;
+					allHit <= 0;
 				end
 			//ship moves right
 			else if(btnR && ~btnL)
 				begin
-					if(position < 610)
-						position<=position+2;
+					if(shipPos < 610)
+						shipPos<=shipPos+5;
 				end
 			//ship moves left
 			else if(btnL && ~btnR)
 				begin
-					if(position > 30)
-						position<=position-2;
+					if(shipPos > 30)
+						shipPos<=shipPos-5;
 				end
 			//shoot from ship
 			else if(btnU && ~btnL && ~btnR)
 				begin
-					shoot <= 1;
-					positionShootY <= 430;
-					positionShootX <= position;
+					//bullet isn't in session
+					if(shoot == 0)
+						begin
+							shoot <= 1;
+							positionShootY <= 430;
+							positionShootX <= shipPos;
+						end
 				end
 			//target isn't hit, keep moving
-			if(hit == 0)
+			if(isHitMid == 0)
 				begin
-					if(positionTopX == 398)
-						left <= 1;
-					if(positionTopX == 202)
-						left <= 0;
-					if(left == 1)
-						positionTopX <= positionTopX - 2;
+					if(midTargetX == 612)
+						isLeftMid <= 1;
+					if(midTargetX == 10)
+						isLeftMid <= 0;
+					if(isLeftMid == 1)
+						midTargetX <= midTargetX - 2;
 					else
-						positionTopX <= positionTopX + 2;
+						midTargetX <= midTargetX + 2;
 				end
-			if(shoot == 1 && hit == 0)
+			//shoot bullet
+			if(shoot == 1 && isHitMid == 0)
 				begin
 					if(positionShootY == 0)
 						shoot <= 0;
 					else
 						positionShootY <= positionShootY - 10;
 
-					if(positionShootX >= (positionTopX - 10) && positionShootX <= (positionTopX + 10)
-						 && positionShootY >= (positionTopY-10) && positionShootY <= (positionTopY+10))
+					if(positionShootX >= (midTargetX - 10) && positionShootX <= (midTargetX + 10)
+						 && positionShootY >= (midTargetY-10) && positionShootY <= (midTargetY+10))
 						begin
-							hit <= 1;
+							isHitMid <= 1;
+							allHit <= 1;
 							shoot <= 0;
 						end
 				end
 		end
 	
-	/*
-		CounterY[9:6]==7
-		Bottom Square
-	*/
-	wire R = (hit == 1) ? (CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7) 
-		| (CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10))
-		: CounterX>=(position-30) && CounterX<=(position+30) && CounterY[9:6]==7;
-	//CounterX>100 && CounterX<200 && CounterY[5:3]==7;
-	wire G = (hit == 0) ? CounterX>=(positionTopX-10) && CounterX<=(positionTopX+10) && CounterY >= (positionTopY-10) && CounterY<=(positionTopY+10)
+	wire R = CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
+	wire Red = (isHitMid == 1) ? (CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 		: 0;
-	wire B = (shoot == 1) ? CounterY>=(positionShootY-10) && CounterY<=(positionShootY+10) 
-		&& CounterX>=(positionShootX-10) && CounterX<=(positionShootX+10) : 0;
+	wire G = (allHit == 0) ? CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10)
+		: 0;
+	wire B = (shoot == 1) ? 
+		(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
+			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1))
+		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1));
 	
 	always @(posedge clk)
 	begin
 		vga_r <= R & inDisplayArea;
+		vgaRed <= Red & inDisplayArea;
 		vga_g <= G & inDisplayArea;
 		vga_b <= B & inDisplayArea;
 	end
@@ -173,7 +179,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vga_r, vga_g, vga_b, Sw0, Sw
 	assign SSD3 = 4'b1111;
 	assign SSD2 = 4'b1111;
 	assign SSD1 = 4'b1111;
-	assign SSD0 = position[3:0];
+	assign SSD0 = shipPos[3:0];
 	
 	// need a scan clk for the seven segment display 
 	// 191Hz (50MHz / 2^18) works well
