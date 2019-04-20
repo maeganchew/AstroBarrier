@@ -45,12 +45,20 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 	///////////////		VGA control starts here		/////////////////
 	/////////////////////////////////////////////////////////////////
 	reg [9:0] shipPos;
+	
 	reg [9:0] midTargetX;
 	reg [9:0] midTargetY;
 	reg [1:0] isLeftMid;
-	reg [1:0] shoot;
 	reg [1:0] isHitMid;
+
+	reg [9:0] topTargetX;
+	reg [9:0] topTargetY;
+	reg [1:0] isLeftTop;
+	reg [1:0] isHitTop;
+
+	reg [1:0] shoot;
 	reg [1:0] allHit;
+
 	reg [9:0] positionShootY;
 	reg [9:0] positionShootX;
 	
@@ -59,11 +67,18 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 			if(reset)
 				begin
 					shipPos<=400;
+
 					midTargetX <= 200;
 					midTargetY <= 250;
-					isLeftMid <= 0;
-					shoot <= 0;
 					isHitMid <= 0;
+					isLeftMid <= 0;
+
+					topTargetX <= 20;
+					topTargetY <= 100;
+					isHitTop <= 0;
+					isLeftTop <= 1;
+					
+					shoot <= 0;
 					allHit <= 0;
 				end
 			//ship moves right
@@ -89,7 +104,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 							positionShootX <= shipPos;
 						end
 				end
-			//target isn't hit, keep moving
+			//middle target isn't hit, keep moving
 			if(isHitMid == 0)
 				begin
 					if(midTargetX == 612)
@@ -102,7 +117,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 						midTargetX <= midTargetX + 2;
 				end
 			//shoot bullet
-			if(shoot == 1 && isHitMid == 0)
+			if(shoot == 1 && allHit == 0)
 				begin
 					if(positionShootY == 0)
 						shoot <= 0;
@@ -113,7 +128,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 						 && positionShootY >= (midTargetY-10) && positionShootY <= (midTargetY+10))
 						begin
 							isHitMid <= 1;
-							allHit <= 1;
+							//allHit <= 1;
 							shoot <= 0;
 						end
 				end
