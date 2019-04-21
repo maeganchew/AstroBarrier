@@ -164,7 +164,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 										isUpLeftTop <= 0;
 								end
 							else
-								topTargetX <= topTargetX - 2;
+								topTargetX <= topTargetX - 4;
 						end
 					else
 						begin
@@ -183,7 +183,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 										isUpLeftTop <= 0;
 								end
 							else
-								topTargetX <= topTargetX + 2;
+								topTargetX <= topTargetX + 4;
 						end
 				end
 					//top target isn't hit, keep moving back and forth
@@ -215,7 +215,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 										isUpRightBottom <= 0;
 								end
 							else
-								bottomTargetX <= bottomTargetX - 2;
+								bottomTargetX <= bottomTargetX - 4;
 						end
 					else
 						begin
@@ -234,7 +234,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 										isUpRightBottom <= 0;
 								end
 							else
-								bottomTargetX <= bottomTargetX + 2;
+								bottomTargetX <= bottomTargetX + 4;
 						end
 				end
 			//shoot bullet
@@ -334,23 +334,24 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 				: 0
 			: 0;
-	wire G = 0;
+	wire G = CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
 	wire B = (shoot == 1) ? 
 					(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
-				 : 0;
+					| (CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7)
+				 : CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
 	wire Blue = (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1))
 				//bottom track
 				| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 100)
 				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 101 && CounterX >= 99)
 				| (CounterY >= 349 && CounterY<= 351 && CounterX >= 100  && CounterX <= 300)
 				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 301 && CounterX >= 299)
-				| (CounterY >= 399 && CounterY<= 401 && CounterX <= 634 && CounterX >= 300)
+				| (CounterY >= 399 && CounterY<= 401 && CounterX <= 636 && CounterX >= 300)
 				//top track
 				| (CounterY >= 99 && CounterY<= 101 && CounterX >= 0  && CounterX <= 300)
 				| (CounterY >= 100 && CounterY<= 150 && CounterX <= 301 && CounterX >= 299)
 				| (CounterY >= 149 && CounterY<= 151 && CounterX >= 300  && CounterX <= 500)
 				| (CounterY >= 100 && CounterY<= 150 && CounterX <= 501 && CounterX >= 499)
-				| (CounterY >= 99 && CounterY<= 101 && CounterX <= 634 && CounterX >= 500);
+				| (CounterY >= 99 && CounterY<= 101 && CounterX <= 636 && CounterX >= 500);
 	
 	always @(posedge clk)
 	begin
