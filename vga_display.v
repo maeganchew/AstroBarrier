@@ -180,8 +180,8 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 			: 0;
 	wire B = (shoot == 1) ? 
 		(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
-			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1))
-		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1));
+			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1))
+		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1));
 	
 	always @(posedge clk)
 	begin
