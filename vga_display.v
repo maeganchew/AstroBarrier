@@ -116,6 +116,18 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 					else
 						midTargetX <= midTargetX + 2;
 				end
+						//middle target isn't hit, keep moving
+			if(isHitTop == 0)
+				begin
+					if(topTargetX == 612)
+						isLeftTop <= 1;
+					if(topTargetX == 10)
+						isLeftTop <= 0;
+					if(isLeftTop == 1)
+						topTargetX <= topTargetX - 2;
+					else
+						topTargetX <= topTargetX + 2;
+				end
 			//shoot bullet
 			if(shoot == 1 && allHit == 0)
 				begin
@@ -137,7 +149,8 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 	wire R = CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
 	wire Red = (isHitMid == 1) ? (CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 		: 0;
-	wire G = (allHit == 0) ? CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10)
+	wire G = (allHit == 0) ? (CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+		| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
 		: 0;
 	wire B = (shoot == 1) ? 
 		(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
