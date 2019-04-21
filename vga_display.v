@@ -80,12 +80,12 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 					midTargetX <= 200;
 					midTargetY <= 250;
 					isHitMid <= 0;
-					isLeftMid <= 0;
+					isLeftMid <= 1;
 
 					topTargetX <= 600;
-					topTargetY <= 102;
+					topTargetY <= 100;
 					isHitTop <= 0;
-					isLeftTop <= 1;
+					isLeftTop <= 0;
 					isUpRightTop <= 0;
 					isUpLeftTop <= 0;
 
@@ -125,7 +125,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 			//middle target isn't hit, keep moving back and forth
 			if(isHitMid == 0)
 				begin
-					if(midTargetX > 617)
+					if(midTargetX > 620)
 						isLeftMid <= 1;
 					else if(midTargetX < 11)
 						isLeftMid <= 0;
@@ -138,34 +138,64 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 			//top target isn't hit, keep moving back and forth
 			if(isHitTop == 0)
 				begin
-					if(topTargetX > 617)
+					if(topTargetX > 620)
 						isLeftTop <= 1;
 					else if(topTargetX < 11)
 						isLeftTop <= 0;
-					else if(topTargetX == 200)
+					else if(topTargetX == 300)
 						isUpLeftTop <= 1;
-					else if(bottomTargetX == 400)
+					else if(topTargetX == 500)
 						isUpRightTop <= 1;
 
 					if(isLeftTop == 1)
 						begin
-							topTargetX <= topTargetX - 2;
+							if(isUpRightTop == 1)
+								begin
+									if(topTargetY <= 150)
+										topTargetY <= topTargetY + 2;
+									else
+										isUpRightTop <= 0;
+								end
+							else if(isUpLeftTop == 1)
+								begin
+									if(topTargetY >= 100)
+										topTargetY <= topTargetY - 2;
+									else
+										isUpLeftTop <= 0;
+								end
+							else
+								topTargetX <= topTargetX - 2;
 						end
 					else
 						begin
-							topTargetX <= topTargetX + 2;
+							if(isUpRightTop == 1)
+								begin
+									if(topTargetY >= 100)
+										topTargetY <= topTargetY - 2;
+									else
+										isUpRightTop <= 0;
+								end
+							else if(isUpLeftTop)
+								begin
+									if(topTargetY <= 150)
+										topTargetY <= topTargetY + 2;
+									else
+										isUpLeftTop <= 0;
+								end
+							else
+								topTargetX <= topTargetX + 2;
 						end
 				end
 					//top target isn't hit, keep moving back and forth
 			if(isHitBottom == 0)
 				begin
-					if(bottomTargetX > 617)
+					if(bottomTargetX > 620)
 						isLeftBottom <= 1;
 					else if(bottomTargetX < 11)
 						isLeftBottom <= 0;
-					else if(bottomTargetX == 200)
+					else if(bottomTargetX == 100)
 						isUpLeftBottom <= 1;
-					else if(bottomTargetX == 400)
+					else if(bottomTargetX == 300)
 						isUpRightBottom <= 1;
 
 					if(isLeftBottom == 1)
@@ -308,12 +338,19 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 	wire B = (shoot == 1) ? 
 					(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
 				 : 0;
-	wire Blue = (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
-				| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 200)
-				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 201 && CounterX >= 199)
-				| (CounterY >= 349 && CounterY<= 351 && CounterX >= 200  && CounterX <= 400)
-				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 401 && CounterX >= 399)
-				| (CounterY >= 399 && CounterY<= 401 && CounterX <= 630 && CounterX >= 400);
+	wire Blue = (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1))
+				//bottom track
+				| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 100)
+				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 101 && CounterX >= 99)
+				| (CounterY >= 349 && CounterY<= 351 && CounterX >= 100  && CounterX <= 300)
+				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 301 && CounterX >= 299)
+				| (CounterY >= 399 && CounterY<= 401 && CounterX <= 634 && CounterX >= 300)
+				//top track
+				| (CounterY >= 99 && CounterY<= 101 && CounterX >= 0  && CounterX <= 300)
+				| (CounterY >= 100 && CounterY<= 150 && CounterX <= 301 && CounterX >= 299)
+				| (CounterY >= 149 && CounterY<= 151 && CounterX >= 300  && CounterX <= 500)
+				| (CounterY >= 100 && CounterY<= 150 && CounterX <= 501 && CounterX >= 499)
+				| (CounterY >= 99 && CounterY<= 101 && CounterX <= 634 && CounterX >= 500);
 	
 	always @(posedge clk)
 	begin
