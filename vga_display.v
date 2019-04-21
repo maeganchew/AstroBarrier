@@ -2,16 +2,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 // VGA verilog template
 //////////////////////////////////////////////////////////////////////////////////
-module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b, Sw0, Sw1, btnL, btnR, btnU,
+module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vga_r, vga_g, vga_b, Sw0, Sw1, btnL, btnR, btnU,
 	St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 	An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp,
 	LD0, LD1, LD2, LD3, LD4, LD5, LD6, LD7);
 	input ClkPort, Sw0, btnL, btnR, btnU, Sw0, Sw1;
 	output St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar;
-	output vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b;
+	output vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vga_r, vga_g, vga_b;
 	output An0, An1, An2, An3, Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp;
 	output LD0, LD1, LD2, LD3, LD4, LD5, LD6, LD7;
-	reg vgaRed, vga_r, vga_g, vga_b;
+	reg vgaRed, vgaGreen, vga_r, vga_g, vga_b;
 	
 	//////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -302,21 +302,21 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 				: 0
 			: 0;
-	wire B = (shoot == 1) ? 
-		(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
-			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
-			| (CounterY >= (bottomTargetY-1) && CounterY<=(bottomTargetY+1) && CounterX <= 0 && CounterX >= 200)
-		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
-			| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 200)
-			| (CounterY >= 350 && CounterY<= 400 && CounterX <= 201 && CounterX >= 199)
-			| (CounterY >= 349 && CounterY<= 351 && CounterX >= 200  && CounterX <= 400)
-			| (CounterY >= 350 && CounterY<= 400 && CounterX <= 401 && CounterX >= 399)
-			| (CounterY >= 399 && CounterY<= 401 && CounterX <= 620 && CounterX >= 400);
+	wire Green = (shoot == 1) ? 
+					(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
+				 : 0;
+	wire B = (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
+				| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 200)
+				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 201 && CounterX >= 199)
+				| (CounterY >= 349 && CounterY<= 351 && CounterX >= 200  && CounterX <= 400)
+				| (CounterY >= 350 && CounterY<= 400 && CounterX <= 401 && CounterX >= 399)
+				| (CounterY >= 399 && CounterY<= 401 && CounterX <= 620 && CounterX >= 400);
 	
 	always @(posedge clk)
 	begin
 		vga_r <= R & inDisplayArea;
 		vgaRed <= Red & inDisplayArea;
+		vgaGreen <= Green & inDisplayArea;
 		vga_g <= G & inDisplayArea;
 		vga_b <= B & inDisplayArea;
 	end
