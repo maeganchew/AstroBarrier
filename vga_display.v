@@ -54,7 +54,16 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 	reg [9:0] topTargetX;
 	reg [9:0] topTargetY;
 	reg [1:0] isLeftTop;
+	reg [1:0] isUpRightTop;
+	reg [1:0] isUpLeftTop;
 	reg [1:0] isHitTop;
+
+	reg [9:0] bottomTargetX;
+	reg [9:0] bottomTargetY;
+	reg [1:0] isLeftBottom;
+	reg [1:0] isUpRightBottom;
+	reg [1:0] isUpLeftBottom;
+	reg [1:0] isHitBottom;
 
 	reg [1:0] shoot;
 	reg [1:0] allHit;
@@ -73,10 +82,19 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 					isHitMid <= 0;
 					isLeftMid <= 0;
 
-					topTargetX <= 20;
-					topTargetY <= 100;
+					topTargetX <= 600;
+					topTargetY <= 102;
 					isHitTop <= 0;
 					isLeftTop <= 1;
+					isUpRightTop <= 0;
+					isUpLeftTop <= 0;
+
+					bottomTargetX <= 300;
+					bottomTargetY <= 400;
+					isHitBottom <= 0;
+					isLeftBottom <= 1;
+					isUpRightBottom <= 0;
+					isUpLeftBottom <= 0;
 					
 					shoot <= 0;
 					allHit <= 0;
@@ -107,26 +125,49 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 			//middle target isn't hit, keep moving back and forth
 			if(isHitMid == 0)
 				begin
-					if(midTargetX == 612)
+					if(midTargetX > 614)
 						isLeftMid <= 1;
-					if(midTargetX == 10)
+					else if(midTargetX < 11)
 						isLeftMid <= 0;
+
 					if(isLeftMid == 1)
 						midTargetX <= midTargetX - 2;
 					else
 						midTargetX <= midTargetX + 2;
 				end
-			//tio target isn't hit, keep moving back and forth
+			//top target isn't hit, keep moving back and forth
 			if(isHitTop == 0)
 				begin
-					if(topTargetX == 612)
+					if(topTargetX > 614)
 						isLeftTop <= 1;
-					if(topTargetX == 10)
+					else if(topTargetX < 11)
 						isLeftTop <= 0;
+
 					if(isLeftTop == 1)
-						topTargetX <= topTargetX - 2;
+						begin
+							topTargetX <= topTargetX - 2;
+						end
 					else
-						topTargetX <= topTargetX + 2;
+						begin
+							topTargetX <= topTargetX + 2;
+						end
+				end
+					//top target isn't hit, keep moving back and forth
+			if(isHitBottom == 0)
+				begin
+					if(bottomTargetX > 614)
+						isLeftBottom <= 1;
+					else if(bottomTargetX < 11)
+						isLeftBottom <= 0;
+
+					if(isLeftBottom == 1)
+						begin
+							bottomTargetX <= bottomTargetX - 2;
+						end
+					else
+						begin
+							bottomTargetX <= bottomTargetX + 2;
+						end
 				end
 			//shoot bullet
 			if(shoot == 1)
@@ -142,7 +183,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 						begin
 							isHitMid <= 1;
 							shoot <= 0;
-							if(isHitTop == 1)
+							if((isHitTop == 1) && (isHitBottom == 1))
 								allHit <= 1;
 						end
 					else if(positionShootX >= (topTargetX - 10) && positionShootX <= (topTargetX + 10)
@@ -150,7 +191,15 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 						begin
 							isHitTop <= 1;
 							shoot <= 0;
-							if(isHitMid == 1)
+							if((isHitMid == 1) && (isHitBottom == 1))
+								allHit <= 1;
+						end
+					else if(positionShootX >= (bottomTargetX - 10) && positionShootX <= (bottomTargetX + 10)
+						 && positionShootY >= (bottomTargetY-10) && positionShootY <= (bottomTargetY+10))
+						begin
+							isHitBottom <= 1;
+							shoot <= 0;
+							if((isHitMid == 1) && (isHitTop == 1))
 								allHit <= 1;
 						end
 				end
@@ -158,18 +207,42 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 	
 	wire R = CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
 	wire Red = (allHit == 0) ? 
-				(isHitTop == 1) ? 
+				((isHitTop == 1) && (isHitBottom == 1)) ? 
+					(CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+						| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
+				: ((isHitTop == 1) && (isHitMid == 1)) ? 
+					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+						| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+				: ((isHitBottom == 1) && (isHitMid == 1)) ? 
+					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+						| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
+				:(isHitTop == 1) ? 
 					(CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
 				: (isHitMid == 1) ? 
 					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+				: (isHitBottom == 1) ? 
+					(CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
 				: 0
 			: (CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
-				| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10));
+				| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+				| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10));
 	wire G = (allHit == 0) ? 
 				//top & middle are still active
-				((isHitMid == 0) && (isHitTop == 0)) ? 
+				((isHitMid == 0) && (isHitTop == 0) && (isHitBottom == 0)) ? 
 					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 						| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+						| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
+				: ((isHitTop == 0) && (isHitBottom == 0)) ? 
+					(CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+						| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
+				: ((isHitTop == 0) && (isHitMid == 0)) ? 
+					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+						| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
+				: ((isHitBottom == 0) && (isHitMid == 0)) ? 
+					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
+						| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
+				: (isHitBottom == 0) ? 
+					(CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10))
 				//only top
 				: (isHitTop == 0) ? 
 					(CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
@@ -180,8 +253,10 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vga_r, vga_g, vga_b,
 			: 0;
 	wire B = (shoot == 1) ? 
 		(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
-			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1))
-		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1));
+			| (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
+			| (CounterY >= (bottomTargetY-1) && CounterY<=(bottomTargetY+1))
+		: (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1)) | (CounterY >= (topTargetY-1) && CounterY<=(topTargetY+1)) 
+			| (CounterY >= (bottomTargetY-1) && CounterY<=(bottomTargetY+1));
 	
 	always @(posedge clk)
 	begin
