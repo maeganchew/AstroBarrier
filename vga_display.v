@@ -138,17 +138,23 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 			//top target isn't hit, keep moving back and forth
 			if(isHitTop == 0)
 				begin
+					//go left
 					if(topTargetX > 620)
 						isLeftTop <= 1;
+					//go right
 					else if(topTargetX < 11)
 						isLeftTop <= 0;
+					//right bump
 					else if(topTargetX == 376)
 						isUpLeftTop <= 1;
+					//left bump
 					else if(topTargetX == 576)
 						isUpRightTop <= 1;
 
+					//moving left
 					if(isLeftTop == 1)
 						begin
+							//right bump, go down
 							if(isUpRightTop == 1)
 								begin
 									if(topTargetY <= 150)
@@ -156,6 +162,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 									else
 										isUpRightTop <= 0;
 								end
+							//left bump, go up
 							else if(isUpLeftTop == 1)
 								begin
 									if(topTargetY >= 100)
@@ -166,8 +173,10 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 							else
 								topTargetX <= topTargetX - 4;
 						end
+					//moving right
 					else
 						begin
+							//right bump, go up
 							if(isUpRightTop == 1)
 								begin
 									if(topTargetY >= 100)
@@ -175,6 +184,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 									else
 										isUpRightTop <= 0;
 								end
+							//left bump, go down
 							else if(isUpLeftTop)
 								begin
 									if(topTargetY <= 150)
@@ -186,20 +196,26 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 								topTargetX <= topTargetX + 4;
 						end
 				end
-					//top target isn't hit, keep moving back and forth
+			//top target isn't hit, keep moving back and forth
 			if(isHitBottom == 0)
 				begin
+					//change to left
 					if(bottomTargetX > 620)
 						isLeftBottom <= 1;
+					//change to right
 					else if(bottomTargetX < 11)
 						isLeftBottom <= 0;
+					//left bump
 					else if(bottomTargetX == 100)
 						isUpLeftBottom <= 1;
+					//right bump
 					else if(bottomTargetX == 300)
 						isUpRightBottom <= 1;
 
+					//moving left
 					if(isLeftBottom == 1)
 						begin
+							//left bump, go down
 							if(isUpLeftBottom == 1)
 								begin
 									if(bottomTargetY <= 400)
@@ -207,6 +223,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 									else
 										isUpLeftBottom <= 0;
 								end
+							//right bump, go up
 							else if(isUpRightBottom == 1)
 								begin
 									if(bottomTargetY >= 350)
@@ -217,8 +234,10 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 							else
 								bottomTargetX <= bottomTargetX - 4;
 						end
+					//moving right
 					else
 						begin
+							//left bump, go up
 							if(isUpLeftBottom == 1)
 								begin
 									if(bottomTargetY >= 350)
@@ -226,6 +245,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 									else
 										isUpLeftBottom <= 0;
 								end
+							//right bump, go down
 							else if(isUpRightBottom == 1)
 								begin
 									if(bottomTargetY <= 400)
@@ -274,11 +294,13 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 						end
 				end
 		end
-	
-	wire R = (shoot == 1) ? 
+			
+	wire R = //bullet & ship
+			(shoot == 1) ? 
 					(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
 					| (CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7)
 				 : CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
+	//hit targets
 	wire Red = 
 			//all aren't hit
 			(allHit == 0) ? 
@@ -308,6 +330,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 			: (CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 				| (CounterX>=(topTargetX-10) && CounterX<=(topTargetX+10) && CounterY >= (topTargetY-10) && CounterY<=(topTargetY+10))
 				| (CounterX>=(bottomTargetX-10) && CounterX<=(bottomTargetX+10) && CounterY >= (bottomTargetY-10) && CounterY<=(bottomTargetY+10));
+	//valid targets
 	wire Green = (allHit == 0) ? 
 				//all active
 				((isHitMid == 0) && (isHitTop == 0) && (isHitBottom == 0)) ? 
@@ -338,11 +361,15 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 					(CounterX>=(midTargetX-10) && CounterX<=(midTargetX+10) && CounterY >= (midTargetY-10) && CounterY<=(midTargetY+10))
 				: 0
 			: 0;
-	wire G = (shoot == 1) ? 
+
+	wire G = //ship & bullet
+			(shoot == 1) ? 
 					(CounterY>=(positionShootY-5) && CounterY<=(positionShootY+5) && CounterX>=(positionShootX-3) && CounterX<=(positionShootX+3))
 					| (CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7)
 				 : CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
+				//ship
 	wire B = CounterX>=(shipPos-30) && CounterX<=(shipPos+30) && CounterY[9:6]==7;
+				//tracks
 	wire Blue = (CounterY >= (midTargetY-1) && CounterY<=(midTargetY+1))
 				//bottom track
 				| (CounterY >= 399 && CounterY<= 401 && CounterX >= 0  && CounterX <= 100)
@@ -357,6 +384,7 @@ module vga_display(ClkPort, vga_h_sync, vga_v_sync, vgaRed, vgaGreen, vgaBlue, v
 				| (CounterY >= 100 && CounterY<= 150 && CounterX <= 577 && CounterX >= 575)
 				| (CounterY >= 99 && CounterY<= 101 && CounterX <= 636 && CounterX >= 576);
 	
+	//display with vga
 	always @(posedge clk)
 	begin
 		vga_r <= R & inDisplayArea;
